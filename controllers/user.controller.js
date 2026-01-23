@@ -16,68 +16,102 @@ const userValidator = z.object({
 });
 
 export const getUsers = async (req, res) => {
-  try {
-    const users = await User.find(); 
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching users", error: error.message });
-  }
+    try {
+        const users = await User.find({}).select('-password');
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 };
 
 export const getUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const user = await User.findById(userId); 
+    try {
+        const { id } = req.params;
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+        const user = await User.findById(id).select('-password');
 
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching user", error: error.message });
-  }
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.status(200).json(user);
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 };
 
 export const createUser = async (req, res) => {
-  try {
-    const parsedData = userValidator.parse(req.body);
+    try {
+        const user = await User.create(req.body);
+        res.status(201).json(user);
 
-    const newUser = await User.create(parsedData);
-    res.status(201).json(newUser);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
-    res.status(500).json({ message: "Error creating user", error: error.message });
-  }
 };
 
 export const updateUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const parsedData = userValidator.partial().parse(req.body);
+    try {
+        const { id } = req.params;
 
-    const updatedUser = await User.findByIdAndUpdate(userId, parsedData, { new: true });
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            req.body,
+            { new: true }
+        ).select('-password');
 
-    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
 
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
+        res.status(200).json(updatedUser);
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
-    res.status(500).json({ message: "Error updating user", error: error.message });
-  }
 };
 
 export const deleteUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const deletedUser = await User.findByIdAndDelete(userId);
+    try {
+        const { id } = req.params;
 
-    if (!deletedUser) return res.status(404).json({ message: "User not found" });
+        const user = await User.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting user", error: error.message });
-  }
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'User deleted successfully'
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 };
