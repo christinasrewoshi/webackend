@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import { connectDB } from "./config/db.js";
 import cookieParser from 'cookie-parser';
 import authRouters from './routers/auth.router.js';
 import userRouters from "./routers/user.router.js";
@@ -31,10 +32,7 @@ app.get("/",(req,res)=>{
     res.send("Backend is Running!")
 })
 
-mongoose.connect(process.env.MONGO_URI).then(
-    ()=>{console.log("MongoDB is Connected.")})
-    .catch((error)=>{console.log(error)})
-
+connectDB();
 
 app.listen(port,()=>{
     console.log(`Server is running in http://localhost:${port}`)
